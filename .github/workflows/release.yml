@@ -1,0 +1,70 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  pre-release:
+
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.get-version.outputs.RELEASE_VERSION }}
+    steps:
+
+#      - name: Fail if branch is not develop
+#        if: github.ref_name != 'develop'
+#        run: |
+#          echo "Releases may not be triggered on a branch other than develop"
+#          exit 1
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version
+        id: get-version
+        run: |
+          RELEASE_VERSION=$(cat package.json \
+            | grep version \
+            | head -1 \
+            | awk -F: '{ print $2 }' \
+            | sed 's/[",]//g' \
+            | tr -d ' ')
+          
+          if [[ ! -z $RELEASE_VERSION ]]; then
+            echo "RELEASE_VERSION=$RELEASE_VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "Couldn't retrieve release version; exiting..."
+            exit 1
+          fi
+
+  build:
+
+    uses: ./.github/workflows/stage-build.yml
+    needs: pre-release
+    secrets: inherit
+    with:
+      UPLOAD_ARTIFACT: true
+
+  release:
+
+    runs-on: ubuntu-latest
+    needs: [ pre-release, build]
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download a single artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+
+      - name: Create release with notes and assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ needs.pre-release.outputs.tag }}
+        run: |
+          gh release create "$tag" ./release.tar.gz\
+              --title="${tag#v}" \
+              --generate-notes
