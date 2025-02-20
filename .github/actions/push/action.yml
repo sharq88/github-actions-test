@@ -17,7 +17,7 @@ runs:
           const crypto = require('crypto');
           const getHmac = ( key, str ) => crypto.createHmac ( 'sha1', key ).update ( str ).digest ( 'hex' );
           const body = JSON.stringify( context.payload );
-          const gw_key = ${{ env.ENVIRONMENT == 'production' }} ? 'GATEWAY_URL_PROD' : 'GATEWAY_URL';
+          const gw_key = ${{ env.ENVIRONMENT == 'production' }} ? 'GATEWAY_SECRET_PROD' : 'GATEWAY_SECRET';
           const gw_secret = core.getInput(gw_key, { required: true });
           const response = await fetch( "${{ inputs.GATEWAY_URL }}" , {
             method: "POST",
