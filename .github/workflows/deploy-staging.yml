@@ -39,3 +39,12 @@ jobs:
             });
             
             console.log(await response.text());
+
+      - uses: chrnorm/deployment-action@v2
+        name: Create GitHub deployment
+        id: deployment
+        with:
+          token: '${{ github.token }}'
+          ref: ${{ github.ref_name }}
+          environment-url: https://staging-docauto.wallstreetdocs.com/webide#/
+          environment: staging
