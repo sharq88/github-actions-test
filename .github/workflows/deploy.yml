@@ -14,12 +14,8 @@ env:
 
 jobs:
 
-  check-release:
-    uses: ./.github/workflows/stage-check-release.yml
-
   deploy:
     runs-on: ubuntu-latest
-    needs: [ check-release ]
     steps:
       - name: Deploy STAGING
         if: ${{ env.ENVIRONMENT == 'staging' }}
