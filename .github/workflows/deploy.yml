@@ -1,0 +1,57 @@
+name: Deploy Release
+run-name: Deploying ${{ github.ref }} to ${{ inputs.ENVIRONMENT }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      ENVIRONMENT:
+        description: Select Environment to deploy to
+        required: true
+        type: environment
+
+env:
+  ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+
+jobs:
+
+  setEnvironment:
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.envVars.outputs.environment }}
+    steps:
+      - name: Pass inputs/env to job outputs
+        id: envVars
+        run: |
+          environment=${{ env.ENVIRONMENT }}
+          
+          if [[ -z "$environment" ]]; then
+            echo "Environment isn't set correctly; exiting..."
+            exit 1
+          fi;
+          
+          echo "Starting deployment for $environment"
+          
+          echo "environment=$environment" >> $GITHUB_OUTPUT
+
+  check-release:
+    uses: ./.github/workflows/stage-check-release.yml
+
+  deploy-staging:
+    if: ${{ needs.setEnvironment.outputs.environment == 'staging' }}
+    needs: [ check-release, setEnvironment ]
+    uses: ./.github/workflows/deploy-staging.yml
+
+  deploy-uat:
+    if: ${{ needs.setEnvironment.outputs.environment == 'uat' }}
+    needs: [ check-release, setEnvironment ]
+    uses: ./.github/workflows/deploy-uat.yml
+
+  deploy-sandbox:
+    if: ${{ needs.setEnvironment.outputs.environment == 'sandbox' }}
+    needs: [ check-release, setEnvironment ]
+    uses: ./.github/workflows/deploy-sandbox.yml
+
+  deploy-prod:
+    if: ${{ needs.setEnvironment.outputs.environment == 'production' }}
+    needs: [ check-release, setEnvironment ]
+    uses: ./.github/workflows/deploy-production.yml
