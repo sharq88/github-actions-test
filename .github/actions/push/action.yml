@@ -13,12 +13,12 @@ runs:
     - name: Trigger WSD Gateway
       uses: actions/github-script@v7
       with:
+        gw_secret: ${{ inputs.GATEWAY_SECRET }}
         script: |
           const crypto = require('crypto');
           const getHmac = ( key, str ) => crypto.createHmac ( 'sha1', key ).update ( str ).digest ( 'hex' );
           const body = JSON.stringify( context.payload );
-          const gw_key = ${{ env.ENVIRONMENT == 'production' }} ? 'GATEWAY_SECRET_PROD' : 'GATEWAY_SECRET';
-          const gw_secret = core.getInput(gw_key, { required: true });
+          const gw_secret = core.getInput( 'gw_secret' );
           const response = await fetch( "${{ inputs.GATEWAY_URL }}" , {
             method: "POST",
             headers: {
@@ -28,7 +28,7 @@ runs:
             },
             body: body,
           });
-          console.log(gw_key, gw_secret, "${{ env.ENVIRONMENT }}");
+          
           const message = await response.text();
           if ( message.code !== 202 ) {
             core.setFailed( message );
