@@ -1,5 +1,12 @@
 name: 'Deploy'
 description: 'Deploy release assets to desired environment'
+inputs:
+  GATEWAY_URL:
+    description: 'WSD Gateway URL to trigger deployment'
+    required: true
+  GATEWAY_SECRET:
+    description: 'WSD Gateway Secret to sign the payload'
+    required: true
 runs:
   using: "composite"
   steps:
@@ -10,17 +17,16 @@ runs:
           const crypto = require('crypto');
           const getHmac = ( key, str ) => crypto.createHmac ( 'sha1', key ).update ( str ).digest ( 'hex' );
           const body = JSON.stringify( context.payload );
-          const resp = await fetch( process.env.GATEWAY_URL , {
+          const response = await fetch( inputs.GATEWAY_URL , {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "x-hub-signature": 'sha1=' + getHmac ( process.env.GATEWAY_SECRET, body ),
+              "x-hub-signature": 'sha1=' + getHmac ( inputs.GATEWAY_SECRET, body ),
               "x-github-event": "push",
             },
             body: body,
           });
-          const message = await resp.text();
-          if ( message.code !== 202 ) {
-            core.setFailed( message );
-            throw new Error( message );
-          }
+          const resp = await response.text();
+          if ( resp.code !== 202 ) {
+          throw new Error( resp.message );
+      }

@@ -8,33 +8,43 @@ on:
         description: Select Environment to deploy to
         required: true
         type: environment
-        default: 'staging'
 
 env:
   ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
-  GATEWAY_URL: https://staging-gateway.priipcloud.com/api/v2.0/deploy/webhook/github
-  GATEWAY_SECRET: ${{ secrets.GATEWAY_SECRET }}
 
 jobs:
 
+  check-release:
+    uses: ./.github/workflows/stage-check-release.yml
+
   deploy:
     runs-on: ubuntu-latest
+    needs: [ check-release ]
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Deploy STAGING
         if: ${{ env.ENVIRONMENT == 'staging' }}
         uses: ./.github/actions/push
+        with:
+          GATEWAY_URL: 'https://staging-gateway.priipcloud.com/api/v2.0/deploy/webhook/github'
+          GATEWAY_SECRET: ${{ secrets.GATEWAY_SECRET }}
 
       - name: Deploy SANDBOX
         if: ${{ env.ENVIRONMENT == 'sandbox' }}
         uses: ./.github/actions/push
+        with:
+          GATEWAY_URL: 'https://uat-gateway.priipcloud.com/api/v2.0/deploy/webhook/github'
+          GATEWAY_SECRET: ${{ secrets.GATEWAY_SECRET }}
 
       - name: Deploy UAT
         if: ${{ env.ENVIRONMENT == 'uat' }}
         uses: ./.github/actions/push
+        with:
+          GATEWAY_URL: 'https://uat-gateway.priipcloud.com/api/v2.0/deploy/webhook/github'
+          GATEWAY_SECRET: ${{ secrets.GATEWAY_SECRET }}
 
       - name: Deploy PRODUCTION
         if: ${{ env.ENVIRONMENT == 'production' }}
         uses: ./.github/actions/push
+        with:
+          GATEWAY_URL: 'https://gateway.priipcloud.com/api/v2.0/deploy/webhook/github'
+          GATEWAY_SECRET: ${{ secrets.GATEWAY_SECRET_PROD }}
