@@ -33,6 +33,10 @@ jobs:
           
           echo "environment=$environment" >> $GITHUB_OUTPUT
 
+      - name: Deploy
+        uses: ./.github/workflows/deploy-staging.yml
+
+
   deploy-staging:
     if: ${{ needs.setEnvironment.outputs.environment == 'staging' }}
     uses: ./.github/workflows/deploy-staging.yml
