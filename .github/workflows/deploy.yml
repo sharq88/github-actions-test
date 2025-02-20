@@ -8,62 +8,30 @@ on:
         description: Select Environment to deploy to
         required: true
         type: environment
+        default: 'staging'
 
 env:
   ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+  GATEWAY_URL: https://staging-gateway.priipcloud.com/api/v2.0/deploy/webhook/github
+  GATEWAY_SECRET: ${{ secrets.GATEWAY_SECRET }}
 
 jobs:
 
-  setEnvironment:
+  deploy:
     runs-on: ubuntu-latest
-    outputs:
-      environment: ${{ steps.envVars.outputs.environment }}
     steps:
-      - name: Pass inputs/env to job outputs
-        id: envVars
-        run: |
-          environment=${{ env.ENVIRONMENT }}
-          
-          if [[ -z "$environment" ]]; then
-            echo "Environment isn't set correctly; exiting..."
-            exit 1
-          fi;
-          
-          echo "Starting deployment for $environment"
-          
-          echo "environment=$environment" >> $GITHUB_OUTPUT
+      - name: Deploy STAGING
+        if: ${{ env.ENVIRONMENT == 'staging' }}
+        uses: ./.github/actions/push
 
-      - name: Trigger Webhook
-        uses: actions/github-script@v7
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GATEWAY_URL: https://staging-gateway.priipcloud.com/api/v2.0/deploy/webhook/github
-          GATEWAY_SECRET: ${{ secrets.GATEWAY_SECRET }}
-        with:
-          script: |
-            console.log(context, process.env)
+      - name: Deploy SANDBOX
+        if: ${{ env.ENVIRONMENT == 'sandbox' }}
+        uses: ./.github/actions/push
 
-            const crypto = require('crypto');
-            const getHmac = ( key, str ) => crypto.createHmac ( 'sha1', key ).update ( str ).digest ( 'hex' );
-            const body = JSON.stringify({ 
-                repository: process.env.GITHUB_REPOSITORY,
-                sender: context.actor,
-                ref: context.ref
-              });
+      - name: Deploy UAT
+        if: ${{ env.ENVIRONMENT == 'uat' }}
+        uses: ./.github/actions/push
 
-            const response = await fetch( process.env.GATEWAY_URL , {
-              method: "POST",
-              headers: { 
-                "Content-Type": "application/json",
-                "x-hub-signature": 'sha1=' + getHmac ( process.env.GATEWAY_SECRET, body ),
-                "x-github-event": "push",
-              },
-              body: body,
-            });
-
-            console.log(await response.text());
-
-
-  deploy-staging:
-    if: ${{ needs.setEnvironment.outputs.environment == 'staging' }}
-    uses: ./.github/workflows/deploy-staging.yml
+      - name: Deploy PRODUCTION
+        if: ${{ env.ENVIRONMENT == 'production' }}
+        uses: ./.github/actions/push

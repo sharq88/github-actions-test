@@ -1,0 +1,26 @@
+name: 'Deploy'
+description: 'Deploy release assets to desired environment'
+runs:
+  using: "composite"
+  steps:
+    - name: Trigger WSD Gateway
+      uses: actions/github-script@v7
+      with:
+        script: |
+          console.log('RUNNING')
+          const crypto = require('crypto');
+          const getHmac = ( key, str ) => crypto.createHmac ( 'sha1', key ).update ( str ).digest ( 'hex' );
+          const body = JSON.stringify( context.payload );
+          const response = await fetch( inputs.GATEWAY_URL , {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-hub-signature": 'sha1=' + getHmac ( inputs.GATEWAY_SECRET, body ),
+              "x-github-event": "push",
+            },
+            body: body,
+          });
+          const resp = await response.text();
+          if ( resp.code !== 202 ) {
+          throw new Error( resp.message );
+        }
