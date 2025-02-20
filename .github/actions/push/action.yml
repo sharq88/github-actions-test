@@ -17,7 +17,7 @@ runs:
           const crypto = require('crypto');
           const getHmac = ( key, str ) => crypto.createHmac ( 'sha1', key ).update ( str ).digest ( 'hex' );
           const body = JSON.stringify( context.payload );
-          const response = await fetch( inputs.GATEWAY_URL , {
+          const resp = await fetch( inputs.GATEWAY_URL , {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -26,7 +26,8 @@ runs:
             },
             body: body,
           });
-          const resp = await response.text();
-          if ( resp.code !== 202 ) {
-          throw new Error( resp.message );
-      }
+          const message = await resp.text();
+          if ( message.code !== 202 ) {
+            core.setFailed( message );
+            throw new Error( message );
+          }
