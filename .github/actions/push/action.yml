@@ -17,16 +17,18 @@ runs:
           const crypto = require('crypto');
           const getHmac = ( key, str ) => crypto.createHmac ( 'sha1', key ).update ( str ).digest ( 'hex' );
           const body = JSON.stringify( context.payload );
+          const gw_key = ${{ env.ENVIRONMENT == 'production' }} ? 'GATEWAY_URL_PROD' : 'GATEWAY_URL';
+          const gw_secret = core.getInput(gw_key, { required: true });
           const response = await fetch( "${{ inputs.GATEWAY_URL }}" , {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "x-hub-signature": 'sha1=' + getHmac ( "${{ inputs.GATEWAY_SECRET }}" , body ),
+              "x-hub-signature": 'sha1=' + getHmac ( gw_secret , body ),
               "x-github-event": "push",
             },
             body: body,
           });
-          console.log("${{ inputs.GATEWAY_SECRET }}")
+          console.log(gw_key, gw_secret, "${{ env.ENVIRONMENT }}");
           const message = await response.text();
           if ( message.code !== 202 ) {
             core.setFailed( message );
