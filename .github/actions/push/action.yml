@@ -26,6 +26,7 @@ runs:
             },
             body: body,
           });
+          console.log("${{ inputs.GATEWAY_SECRET }}")
           const message = await response.text();
           if ( message.code !== 202 ) {
             core.setFailed( message );
