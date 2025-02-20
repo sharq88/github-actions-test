@@ -28,8 +28,7 @@ runs:
             body: body,
           });
           
-          const message = await response.text();
-          if ( message.code !== 202 ) {
+          if ( response.status !== 202 ) {
+            const message = await response.text();
             core.setFailed( message );
-            throw new Error( message );
           }
