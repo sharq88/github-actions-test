@@ -13,17 +13,16 @@ runs:
     - name: Trigger WSD Gateway
       uses: actions/github-script@v7
       with:
-        gw_secret: ${{ inputs.GATEWAY_SECRET }}
+        github-token: ${{ inputs.GATEWAY_SECRET }}
         script: |
           const crypto = require('crypto');
           const getHmac = ( key, str ) => crypto.createHmac ( 'sha1', key ).update ( str ).digest ( 'hex' );
           const body = JSON.stringify( context.payload );
-          const gw_secret = core.getInput( 'gw_secret' );
           const response = await fetch( "${{ inputs.GATEWAY_URL }}" , {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "x-hub-signature": 'sha1=' + getHmac ( gw_secret , body ),
+              "x-hub-signature": 'sha1=' + getHmac ( core.getInput( 'github-token' ) , body ),
               "x-github-event": "push",
             },
             body: body,
