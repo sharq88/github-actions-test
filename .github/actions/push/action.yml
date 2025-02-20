@@ -17,11 +17,11 @@ runs:
           const crypto = require('crypto');
           const getHmac = ( key, str ) => crypto.createHmac ( 'sha1', key ).update ( str ).digest ( 'hex' );
           const body = JSON.stringify( context.payload );
-          const resp = await fetch( inputs.GATEWAY_URL , {
+          const response = await fetch( "${{ inputs.GATEWAY_URL }}" , {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "x-hub-signature": 'sha1=' + getHmac ( inputs.GATEWAY_SECRET, body ),
+              "x-hub-signature": 'sha1=' + getHmac ( "${{ inputs.GATEWAY_SECRET }}" , body ),
               "x-github-event": "push",
             },
             body: body,
