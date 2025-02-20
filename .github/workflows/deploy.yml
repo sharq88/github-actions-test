@@ -33,25 +33,6 @@ jobs:
           
           echo "environment=$environment" >> $GITHUB_OUTPUT
 
-  check-release:
-    uses: ./.github/workflows/stage-check-release.yml
-
   deploy-staging:
     if: ${{ needs.setEnvironment.outputs.environment == 'staging' }}
-    needs: [ check-release, setEnvironment ]
     uses: ./.github/workflows/deploy-staging.yml
-
-  deploy-uat:
-    if: ${{ needs.setEnvironment.outputs.environment == 'uat' }}
-    needs: [ check-release, setEnvironment ]
-    uses: ./.github/workflows/deploy-uat.yml
-
-  deploy-sandbox:
-    if: ${{ needs.setEnvironment.outputs.environment == 'sandbox' }}
-    needs: [ check-release, setEnvironment ]
-    uses: ./.github/workflows/deploy-sandbox.yml
-
-  deploy-prod:
-    if: ${{ needs.setEnvironment.outputs.environment == 'production' }}
-    needs: [ check-release, setEnvironment ]
-    uses: ./.github/workflows/deploy-production.yml
