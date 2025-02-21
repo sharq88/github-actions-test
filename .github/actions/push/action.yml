@@ -18,7 +18,13 @@ runs:
           console.log(context)
           const crypto = require('crypto');
           const getHmac = ( key, str ) => crypto.createHmac ( 'sha1', key ).update ( str ).digest ( 'hex' );
-          context.payload.ref = "release/${{ env.ENVIRONMENT }}";
+          if ( context.payload.ref.match( 'refs/tags/' ) ) {
+            const tag = context.payload.ref.replace( 'refs/tags/', '' );
+            context.payload.ref = `release/${{ env.ENVIRONMENT }}@${tag}`;
+          } else {
+            const commit = context.sha;
+            context.payload.ref = `release/${{ env.ENVIRONMENT }}@${commit}`;
+          }
           console.log(context.payload.ref)
           const body = JSON.stringify( context.payload );
           const response = await fetch( "${{ inputs.GATEWAY_URL }}" , {
