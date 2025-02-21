@@ -15,8 +15,11 @@ runs:
       with:
         github-token: ${{ inputs.GATEWAY_SECRET }}
         script: |
+          console.log(context)
           const crypto = require('crypto');
           const getHmac = ( key, str ) => crypto.createHmac ( 'sha1', key ).update ( str ).digest ( 'hex' );
+          context.payload.ref = "release/${{ env.ENVIRONMENT }}";
+          console.log(context.payload.ref)
           const body = JSON.stringify( context.payload );
           const response = await fetch( "${{ inputs.GATEWAY_URL }}" , {
             method: "POST",
