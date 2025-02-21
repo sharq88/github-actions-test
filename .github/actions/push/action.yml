@@ -15,7 +15,6 @@ runs:
       with:
         github-token: ${{ inputs.GATEWAY_SECRET }}
         script: |
-          console.log(context)
           const crypto = require('crypto');
           const getHmac = ( key, str ) => crypto.createHmac ( 'sha1', key ).update ( str ).digest ( 'hex' );
           if ( context.payload.ref.match( 'refs/tags/' ) ) {
